@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fire Safety Inspection Checklist</title>
+  <style>
+    body { font-family: Arial; padding: 16px; }
+    h2 { margin-top: 24px; }
+    .item { margin-bottom: 16px; }
+    .remark { display:none; margin-top:8px; }
+    label { font-weight: bold; }
+    select, input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Fire Safety Inspection Checklist</h1>
+
+<h2>基本資料</h2>
+<input placeholder="地盤名稱">
+<input type="date">
+<input placeholder="巡查員姓名">
+
+<h2>防火巡查項目</h2>
+
+<div class="item">
+  <label>已實施禁煙政策</label>
+  <select onchange="toggleRemark(this)">
+    <option value="">-- 請選擇 --</option>
+    <option value="ok">尚可</option>
+    <option value="issue">有問題</option>
+  </select>
+  <textarea class="remark" placeholder="備註"></textarea>
+</div>
+
+<div class="item">
+  <label>熱許可證（電焊／風焊）</label>
+  <select onchange="toggleRemark(this)">
+    <option value="">-- 請選擇 --</option>
+    <option value="ok">尚可</option>
+    <option value="issue">有問題</option>
+  </select>
+  <textarea class="remark" placeholder="備註"></textarea>
+</div>
+
+<div class="item">
+  <label>滅火筒足夠及狀況良好</label>
+  <select onchange="toggleRemark(this)">
+    <option value="">-- 請選擇 --</option>
+    <option value="ok">尚可</option>
+    <option value="issue">有問題</option>
+  </select>
+  <textarea class="remark" placeholder="備註"></textarea>
+</div>
+
+<script>
+function toggleRemark(selectEl) {
+  const remark = selectEl.nextElementSibling;
+  remark.style.display = selectEl.value === 'issue' ? 'block' : 'none';
+}
+</script>
+
+</body>
+</html>

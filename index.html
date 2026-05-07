@@ -2,17 +2,14 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<title>Fire Safety Inspection</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire Safety Inspection</title>
 
 <style>
 body{font-family:Arial;background:#2f343a;padding:20px}
 header{display:flex;align-items:center;margin-bottom:20px}
 header img{height:160px}
-header h1{
-  flex:1;color:#fff;text-align:center;
-  font-size:36px;white-space:nowrap;margin:0 20px
-}
+header h1{flex:1;color:#fff;text-align:center;font-size:36px;white-space:nowrap;margin:0 20px}
 header select{font-size:16px}
 
 .section{background:#fff;padding:16px;border-radius:8px;margin-bottom:20px}
@@ -25,6 +22,12 @@ select,input,textarea,button{width:100%;padding:8px;margin-top:6px}
 
 .followup{display:none}
 
+.preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.preview{position:relative}
+.preview img{width:70px;height:70px;object-fit:cover;border:1px solid #ccc;cursor:pointer}
+.preview .del{position:absolute;top:0;right:0;background:red;color:#fff;font-size:12px;padding:2px 5px;cursor:pointer}
+.filename{font-size:11px;text-align:center}
+
 footer{text-align:right}
 button.print{background:#0078d4;color:#fff;border:none;padding:10px 16px;font-size:16px}
 </style>
@@ -33,12 +36,8 @@ button.print{background:#0078d4;color:#fff;border:none;padding:10px 16px;font-si
 <body>
 
 <header>
-  <img src="logo.png" alt="Company Logo">
-
-  <h1 id="title">
-    防火安全巡查清單 Fire Safety Inspection Checklist
-  </h1>
-
+  logo.png
+  <h1 id="title">防火安全巡查清單 Fire Safety Inspection Checklist</h1>
   <select onchange="setLang(this.value)">
     <option value="bi">中英雙語</option>
     <option value="zh">中文</option>
@@ -47,11 +46,11 @@ button.print{background:#0078d4;color:#fff;border:none;padding:10px 16px;font-si
 </header>
 
 <div class="section">
-  <label id="lblProject">地盤 / 工程名稱</label>
+  <label id="lblProject"></label>
   <input>
-  <label id="lblInspector">巡查員</label>
+  <label id="lblInspector"></label>
   <input>
-  <label id="lblDate">巡查日期</label>
+  <label id="lblDate"></label>
   <input type="date">
 </div>
 
@@ -62,7 +61,7 @@ button.print{background:#0078d4;color:#fff;border:none;padding:10px 16px;font-si
 </footer>
 
 <script>
-const texts={
+const uiText={
   zh:{
     title:"防火安全巡查清單",
     project:"地盤 / 工程名稱",
@@ -83,62 +82,102 @@ const texts={
   }
 };
 
-function setLang(l){
-  document.getElementById("title").innerText=texts[l].title;
-  document.getElementById("lblProject").innerText=texts[l].project;
-  document.getElementById("lblInspector").innerText=texts[l].inspector;
-  document.getElementById("lblDate").innerText=texts[l].date;
-}
-
-const checklist=[
-"已委派防火視察火警高危區",
-"已實施禁煙政策",
-"熱許可證（電焊／風焊）",
-"保安巡火情況",
-"工作地方收拾妥當",
-"電動消防泵及消防喉轆",
-"滅火筒足夠及狀況良好",
-"其他救火設施",
-"逃生設備",
-"警告標語",
-"緊急應變小組及聯絡電話",
-"防火安全講座",
-"最近一次火警演習日期",
-"其他觀察事項"
+const items=[
+  {zh:"已委派防火視察火警高危區", en:"Fire watcher appointed for high risk areas"},
+  {zh:"已實施禁煙政策", en:"No smoking policy implemented"},
+  {zh:"熱許可證（電焊／風焊）", en:"Hot work permit (welding / cutting)"},
+  {zh:"保安巡火情況", en:"Fire patrol arrangement"},
+  {zh:"工作地方收拾妥當", en:"Housekeeping condition"},
+  {zh:"電動消防泵及消防喉轆", en:"Fire pump & hose reel"},
+  {zh:"滅火筒足夠及狀況良好", en:"Fire extinguisher condition"},
+  {zh:"其他救火設施", en:"Other fire fighting equipment"},
+  {zh:"逃生設備", en:"Escape routes"},
+  {zh:"警告標語", en:"Warning signs"},
+  {zh:"緊急應變小組及聯絡電話", en:"Emergency response team & contact"},
+  {zh:"防火安全講座", en:"Fire safety briefing"},
+  {zh:"最近一次火警演習日期", en:"Latest fire drill record"},
+  {zh:"其他觀察事項", en:"Other observations"}
 ];
 
 const box=document.getElementById("items");
+let currentLang="bi";
 
-checklist.forEach((t,i)=>{
-  const d=document.createElement("div");
-  d.className="item";
-  d.innerHTML=`
-    <h3>${i+1}. ${t}</h3>
+items.forEach((item,i)=>{
+  const div=document.createElement("div");
+  div.className="item";
+  div.innerHTML=`
+    <h3 class="item-title"></h3>
     <div class="item-grid">
       <div>
         <label>檢查結果</label>
         <select onchange="showFollowup(this)">
           <option></option>
-          <option>不適用</option>
-          <option>滿意</option>
-          <option>尚可</option>
-          <option>欠佳</option>
+          <option>不適用 / N.A.</option>
+          <option>滿意 / Satisfactory</option>
+          <option>尚可 / Fair</option>
+          <option>欠佳 / Poor</option>
         </select>
+
+        <label>現況相片</label>
+        <button onclick="this.nextElementSibling.click()">上載 / Upload</button>
+        <input type="file" multiple accept="image/*" style="display:none"
+               onchange="addPhotos(this)">
+        <div class="preview-list"></div>
       </div>
+
       <div class="followup">
-        <label>備註</label>
+        <label>備註 Remark</label>
         <textarea></textarea>
-        <label>跟進日期</label>
+
+        <label>跟進日期 Follow‑up Date</label>
         <input type="date">
       </div>
     </div>
   `;
-  box.appendChild(d);
+  div.dataset.zh=item.zh;
+  div.dataset.en=item.en;
+  box.appendChild(div);
 });
+
+function addPhotos(input){
+  const list=input.nextElementSibling;
+  [...input.files].forEach(file=>{
+    const p=document.createElement("div");
+    p.className="preview";
+    const img=document.createElement("img");
+    const d=document.createElement("div");
+    const f=document.createElement("div");
+    d.className="del"; d.innerText="×";
+    d.onclick=()=>p.remove();
+    f.className="filename"; f.innerText=file.name;
+    const r=new FileReader();
+    r.onload=e=>img.src=e.target.result;
+    r.readAsDataURL(file);
+    p.append(img,d,f);
+    list.appendChild(p);
+  });
+  input.value="";
+}
 
 function showFollowup(sel){
   const f=sel.closest(".item").querySelector(".followup");
-  f.style.display=(sel.value==="尚可"||sel.value==="欠佳")?"block":"none";
+  f.style.display=(sel.value.includes("尚可")||sel.value.includes("欠佳")||
+                   sel.value.includes("Fair")||sel.value.includes("Poor"))
+                   ?"block":"none";
+}
+
+function setLang(l){
+  currentLang=l;
+  document.getElementById("title").innerText=uiText[l].title;
+  document.getElementById("lblProject").innerText=uiText[l].project;
+  document.getElementById("lblInspector").innerText=uiText[l].inspector;
+  document.getElementById("lblDate").innerText=uiText[l].date;
+
+  document.querySelectorAll(".item").forEach(it=>{
+    if(l==="zh") it.querySelector(".item-title").innerText=it.dataset.zh;
+    else if(l==="en") it.querySelector(".item-title").innerText=it.dataset.en;
+    else it.querySelector(".item-title").innerText=it.dataset.zh+" / "+it.dataset.en;
+  });
 }
 
 setLang("bi");

@@ -7,31 +7,47 @@
 
 <style>
 body{
-  font-family:Arial;
+  font-family:Arial, Helvetica, sans-serif;
   background:#2f343a;
-  color:#000;
-  padding:16px;
+  padding:20px;
 }
 header{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  margin-bottom:16px;
+  margin-bottom:24px;
 }
-header img{height:42px}
-header h1{color:#fff;font-size:20px;margin:0}
+header img{
+  height:160px;   /* Logo 放大 ≥4 倍 */
+}
+header h1{
+  flex:1;
+  text-align:center;
+  font-size:36px;
+  font-weight:bold;
+  white-space:nowrap;
+  color:#fff;
+  margin:0 20px;
+}
+header select{
+  padding:6px;
+  font-size:16px;
+}
 
 .section{
   background:#fff;
   padding:16px;
   border-radius:8px;
-  margin-bottom:16px;
+  margin-bottom:20px;
 }
 
 .item{
-  border-top:1px solid #ddd;
-  margin-top:16px;
+  border-top:2px solid #ddd;
   padding-top:16px;
+  margin-top:16px;
+}
+
+.item h3{
+  margin:0 0 12px 0;
 }
 
 .item-grid{
@@ -40,14 +56,22 @@ header h1{color:#fff;font-size:20px;margin:0}
   gap:16px;
 }
 
-label{font-weight:bold;margin-top:10px;display:block}
-select,input,textarea,button{
+label{
+  font-weight:bold;
+  margin-top:10px;
+  display:block;
+}
+
+select, input, textarea, button{
   width:100%;
   padding:8px;
   margin-top:6px;
+  font-size:14px;
 }
 
-.followup{display:none}
+.followup{
+  display:none;
+}
 
 .preview-list{
   display:flex;
@@ -72,7 +96,7 @@ select,input,textarea,button{
   background:red;
   color:#fff;
   font-size:12px;
-  padding:2px 4px;
+  padding:1px 4px;
   cursor:pointer;
 }
 .filename{
@@ -83,13 +107,15 @@ select,input,textarea,button{
 footer{
   display:flex;
   justify-content:flex-end;
-  gap:12px;
 }
 
 .print-btn{
   background:#0078d4;
-  color:#fff;
   border:none;
+  color:#fff;
+  padding:10px 16px;
+  font-size:16px;
+  cursor:pointer;
 }
 
 .modal{
@@ -111,133 +137,10 @@ footer{
 
 <header>
   <img src="logo.png" alt="Company Logo">
-  <h1 data-i18n="title">Fire Safety Inspection Checklist</h1>
+
+  <h1 data-i18n="title">
+    防火安全巡查清單 Fire Safety Inspection Checklist
+  </h1>
+
   <select onchange="setLang(this.value)">
-    <option value="en">EN</option>
-    <option value="zh">繁中</option>
-  </select>
-</header>
-
-<div class="section">
-  <label data-i18n="project">Project / Site</label>
-  <input>
-  <label data-i18n="inspector">Inspector</label>
-  <input>
-  <label data-i18n="date">Inspection Date</label>
-  <input type="date">
-</div>
-
-<div class="section" id="items"></div>
-
-<footer>
-  <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
-</footer>
-
-<div class="modal" id="modal" onclick="this.style.display='none'">
-  <img id="modalImg">
-</div>
-
-<script>
-const items=[
-"Fire watcher assigned for high fire risk area",
-"No smoking policy implemented",
-"Hot work permit (welding / cutting)",
-"Security fire patrol",
-"Work area housekeeping",
-"Fire pump & hose reel",
-"Fire extinguishers condition",
-"Other fire fighting equipment",
-"Escape route & exit",
-"Warning signs & notices",
-"Emergency response team & contact",
-"Fire safety briefing",
-"Latest fire drill record",
-"Other observations"
-];
-
-const container=document.getElementById("items");
-
-items.forEach((text,i)=>{
-  container.innerHTML+=`
-  <div class="item">
-    <h3>${i+1}. ${text}</h3>
-    <div class="item-grid">
-      <div>
-        <label>Result</label>
-        <select onchange="toggleFollowup(this)">
-          <option value="">-- Select --</option>
-          <option>Not Applicable</option>
-          <option>Satisfactory</option>
-          <option>Fair</option>
-          <option>Poor</option>
-        </select>
-
-        <label>Current Photos</label>
-        <button onclick="this.nextElementSibling.click()">📸 Upload</button>
-        <input type="file" multiple accept="image/*" style="display:none" onchange="handleFiles(this)">
-        <div class="preview-list"></div>
-      </div>
-
-      <div class="followup">
-        <label>Remark</label>
-        <textarea></textarea>
-
-        <label>Follow-up Deadline</label>
-        <input type="date">
-
-        <label>Follow-up Photos</label>
-        <button onclick="this.nextElementSibling.click()">📸 Upload</button>
-        <input type="file" multiple accept="image/*" style="display:none" onchange="handleFiles(this)">
-        <div class="preview-list"></div>
-      </div>
-    </div>
-  </div>`;
-});
-
-function toggleFollowup(sel){
-  const right=sel.closest(".item").querySelector(".followup");
-  right.style.display=(sel.value==="Fair"||sel.value==="Poor")?"block":"none";
-}
-
-function handleFiles(input){
-  const list=input.nextElementSibling;
-  [...input.files].forEach(f=>{
-    const d=document.createElement("div");
-    d.className="preview";
-    const img=document.createElement("img");
-    const del=document.createElement("div");
-    const name=document.createElement("div");
-
-    del.className="del";
-    del.innerText="×";
-    del.onclick=()=>d.remove();
-    name.className="filename";
-    name.innerText=f.name;
-
-    img.onclick=()=>{modalImg.src=img.src;modal.style.display="flex";};
-
-    const r=new FileReader();
-    r.onload=e=>img.src=e.target.result;
-    r.readAsDataURL(f);
-
-    d.append(img,del,name);
-    list.append(d);
-  });
-  input.value="";
-}
-
-const dict={
-en:{title:"Fire Safety Inspection Checklist",project:"Project / Site",inspector:"Inspector",date:"Inspection Date"},
-zh:{title:"防火安全巡查清單",project:"地盤 / 工程名稱",inspector:"巡查員",date:"巡查日期"}
-};
-
-function setLang(l){
-  document.querySelectorAll("[data-i18n]").forEach(e=>{
-    e.innerText=dict[l][e.dataset.i18n];
-  });
-}
-setLang("en");
-</script>
-
-</body>
-</html>
+    <option value="en">English</option>

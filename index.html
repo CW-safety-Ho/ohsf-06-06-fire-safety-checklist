@@ -6,141 +6,237 @@
 <title>Fire Safety Inspection</title>
 
 <style>
-body{font-family:Arial;background:#f4f6f9;padding:16px}
-header{display:flex;justify-content:space-between;align-items:center}
-.section{background:#fff;padding:16px;border-radius:8px;margin-top:16px}
-.item{border-top:1px solid #ddd;padding-top:16px;margin-top:16px}
-label{font-weight:bold;display:block;margin-top:10px}
-select,input,textarea,button{width:100%;padding:8px;margin-top:6px}
+body{
+  font-family:Arial;
+  background:#2f343a;
+  color:#000;
+  padding:16px;
+}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+header img{height:42px}
+header h1{color:#fff;font-size:20px;margin:0}
+
+.section{
+  background:#fff;
+  padding:16px;
+  border-radius:8px;
+  margin-bottom:16px;
+}
+
+.item{
+  border-top:1px solid #ddd;
+  margin-top:16px;
+  padding-top:16px;
+}
+
+.item-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+label{font-weight:bold;margin-top:10px;display:block}
+select,input,textarea,button{
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+}
+
 .followup{display:none}
-.preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.preview{position:relative}
-.preview img{width:80px;height:80px;border:1px solid #ccc;cursor:pointer}
-.preview .del{position:absolute;top:0;right:0;background:red;color:#fff;font-size:12px;padding:2px 4px;cursor:pointer}
-.filename{font-size:12px;text-align:center}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);justify-content:center;align-items:center}
-.modal img{max-width:90%;max-height:90%}
+
+.preview-list{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+.preview{
+  position:relative;
+}
+.preview img{
+  width:70px;
+  height:70px;
+  object-fit:cover;
+  border:1px solid #ccc;
+  cursor:pointer;
+}
+.preview .del{
+  position:absolute;
+  top:0;
+  right:0;
+  background:red;
+  color:#fff;
+  font-size:12px;
+  padding:2px 4px;
+  cursor:pointer;
+}
+.filename{
+  font-size:11px;
+  text-align:center;
+}
+
+footer{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+}
+
+.print-btn{
+  background:#0078d4;
+  color:#fff;
+  border:none;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  justify-content:center;
+  align-items:center;
+}
+.modal img{
+  max-width:90%;
+  max-height:90%;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h2>Fire Safety Inspection Checklist</h2>
+  <img src="logo.png" alt="Company Logo">
+  <h1 data-i18n="title">Fire Safety Inspection Checklist</h1>
+  <select onchange="setLang(this.value)">
+    <option value="en">EN</option>
+    <option value="zh">繁中</option>
+  </select>
 </header>
 
 <div class="section">
-  <label>地盤 / 工程名稱</label>
+  <label data-i18n="project">Project / Site</label>
   <input>
-  <label>巡查員姓名</label>
+  <label data-i18n="inspector">Inspector</label>
   <input>
-  <label>巡查日期</label>
+  <label data-i18n="date">Inspection Date</label>
   <input type="date">
 </div>
 
 <div class="section" id="items"></div>
+
+<footer>
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+</footer>
 
 <div class="modal" id="modal" onclick="this.style.display='none'">
   <img id="modalImg">
 </div>
 
 <script>
-const checklist = [
-"已委派防火視察火警高危區",
-"已實施禁煙政策",
-"熱許可證（電焊／風焊）",
-"保安巡火情況",
-"工作地方收拾妥當（沒有雜物、紙皮、廢紙積聚）",
-"電動消防泵及消防喉轆",
-"滅火筒足夠及狀況良好",
-"其他救火設施（例如灑水設備）",
-"逃生設備（例如火通道）",
-"警告標語（禁止吸煙／易燃物品）",
-"緊急應變小組已設立及張貼緊急事故聯絡電話",
-"防火安全講座",
-"最近一次火警演習日期",
-"其他觀察事項"
+const items=[
+"Fire watcher assigned for high fire risk area",
+"No smoking policy implemented",
+"Hot work permit (welding / cutting)",
+"Security fire patrol",
+"Work area housekeeping",
+"Fire pump & hose reel",
+"Fire extinguishers condition",
+"Other fire fighting equipment",
+"Escape route & exit",
+"Warning signs & notices",
+"Emergency response team & contact",
+"Fire safety briefing",
+"Latest fire drill record",
+"Other observations"
 ];
 
-const container = document.getElementById("items");
+const container=document.getElementById("items");
 
-checklist.forEach((text, i) => {
-  container.innerHTML += `
+items.forEach((text,i)=>{
+  container.innerHTML+=`
   <div class="item">
     <h3>${i+1}. ${text}</h3>
+    <div class="item-grid">
+      <div>
+        <label>Result</label>
+        <select onchange="toggleFollowup(this)">
+          <option value="">-- Select --</option>
+          <option>Not Applicable</option>
+          <option>Satisfactory</option>
+          <option>Fair</option>
+          <option>Poor</option>
+        </select>
 
-    <label>檢查結果</label>
-    <select onchange="toggleFollowup(this)">
-      <option value="">-- 請選擇 --</option>
-      <option value="na">不適用</option>
-      <option value="ok">滿意</option>
-      <option value="fair">尚可</option>
-      <option value="poor">欠佳</option>
-    </select>
+        <label>Current Photos</label>
+        <button onclick="this.nextElementSibling.click()">📸 Upload</button>
+        <input type="file" multiple accept="image/*" style="display:none" onchange="handleFiles(this)">
+        <div class="preview-list"></div>
+      </div>
 
-    <label>現況相片</label>
-    <button onclick="this.nextElementSibling.click()">📸 上載相片</button>
-    <input type="file" multiple accept="image/*" style="display:none"
-      onchange="handleFiles(this)">
+      <div class="followup">
+        <label>Remark</label>
+        <textarea></textarea>
 
-    <div class="preview-list"></div>
+        <label>Follow-up Deadline</label>
+        <input type="date">
 
-    <div class="followup">
-      <label>備註</label>
-      <textarea></textarea>
-
-      <label>跟進限期</label>
-      <input type="date">
-
-      <label>跟進相片</label>
-      <button onclick="this.nextElementSibling.click()">📸 上載相片</button>
-      <input type="file" multiple accept="image/*" style="display:none"
-        onchange="handleFiles(this)">
-      <div class="preview-list"></div>
+        <label>Follow-up Photos</label>
+        <button onclick="this.nextElementSibling.click()">📸 Upload</button>
+        <input type="file" multiple accept="image/*" style="display:none" onchange="handleFiles(this)">
+        <div class="preview-list"></div>
+      </div>
     </div>
-
-    <button onclick="shareItem('${text}')">📤 分享此項目</button>
-  </div>
-  `;
+  </div>`;
 });
 
 function toggleFollowup(sel){
-  const block = sel.closest(".item").querySelector(".followup");
-  block.style.display = (sel.value==="fair"||sel.value==="poor")?"block":"none";
+  const right=sel.closest(".item").querySelector(".followup");
+  right.style.display=(sel.value==="Fair"||sel.value==="Poor")?"block":"none";
 }
 
 function handleFiles(input){
-  const list = input.nextElementSibling;
+  const list=input.nextElementSibling;
   [...input.files].forEach(f=>{
-    const div=document.createElement("div");
-    div.className="preview";
+    const d=document.createElement("div");
+    d.className="preview";
     const img=document.createElement("img");
     const del=document.createElement("div");
     const name=document.createElement("div");
 
-    del.className="del"; del.innerText="×";
-    del.onclick=()=>div.remove();
-    name.className="filename"; name.innerText=f.name;
+    del.className="del";
+    del.innerText="×";
+    del.onclick=()=>d.remove();
+    name.className="filename";
+    name.innerText=f.name;
+
+    img.onclick=()=>{modalImg.src=img.src;modal.style.display="flex";};
 
     const r=new FileReader();
     r.onload=e=>img.src=e.target.result;
     r.readAsDataURL(f);
-    img.onclick=()=>{ modalImg.src=img.src; modal.style.display="flex"; };
 
-    div.append(img,del,name);
-    list.append(div);
+    d.append(img,del,name);
+    list.append(d);
   });
   input.value="";
 }
 
-function shareItem(text){
-  const msg=encodeURIComponent("Fire Safety Inspection:\n"+text);
-  if(confirm("WhatsApp? Cancel = Email")){
-    window.open("https://wa.me/?text="+msg);
-  }else{
-    location="mailto:?body="+msg;
-  }
+const dict={
+en:{title:"Fire Safety Inspection Checklist",project:"Project / Site",inspector:"Inspector",date:"Inspection Date"},
+zh:{title:"防火安全巡查清單",project:"地盤 / 工程名稱",inspector:"巡查員",date:"巡查日期"}
+};
+
+function setLang(l){
+  document.querySelectorAll("[data-i18n]").forEach(e=>{
+    e.innerText=dict[l][e.dataset.i18n];
+  });
 }
+setLang("en");
 </script>
 
 </body>

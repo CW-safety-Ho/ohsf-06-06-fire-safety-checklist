@@ -3,32 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fire Safety Inspection</title>
+<title>Inspection</title>
 
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f9; padding:16px }
 header { display:flex; justify-content:space-between; align-items:center }
 .section { background:#fff; padding:16px; border-radius:8px; margin-top:16px }
-label { font-weight:bold; margin-top:12px; display:block }
-button, select, input, textarea {
-  width:100%; padding:8px; margin-top:6px; font-size:14px
-}
+label { font-weight:bold; display:block; margin-top:12px }
+select,input,textarea,button { width:100%; padding:8px; margin-top:6px }
 .preview-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
-.preview { position:relative }
-.preview img {
-  width:80px; height:80px; object-fit:cover; border:1px solid #ccc; cursor:pointer
-}
-.preview span {
-  position:absolute; top:0; right:0; background:red; color:#fff;
-  font-size:12px; padding:2px 4px; cursor:pointer
-}
-.followup { display:none }
-.finish { background:#999; color:#fff; font-weight:bold; border:none }
-.finish:disabled { cursor:not-allowed }
-.modal {
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
-  justify-content:center; align-items:center
-}
+.preview img { width:80px; height:80px; object-fit:cover; cursor:pointer; border:1px solid #ccc }
+.preview span { position:absolute; right:0; top:0; background:red; color:white; cursor:pointer }
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center }
 .modal img { max-width:90%; max-height:90% }
 </style>
 </head>
@@ -36,7 +22,7 @@ button, select, input, textarea {
 <body>
 
 <header>
-  <h2 data-i18n="title">Fire Safety Inspection Record</h2>
+  <h2 data-i18n="title"></h2>
   <select onchange="setLang(this.value)">
     <option value="zh">中(繁)</option>
     <option value="zhcn">中(简)</option>
@@ -51,48 +37,30 @@ button, select, input, textarea {
 </header>
 
 <div class="section">
-  <input data-i18n-placeholder="project" placeholder="Project / Site Name">
-  <input data-i18n-placeholder="inspector" placeholder="Inspector Name">
+  <input data-i18n-placeholder="project">
+  <input data-i18n-placeholder="inspector">
   <input type="date">
 </div>
 
 <div class="section">
-<h3 data-i18n="item">Item – Fire Extinguisher Condition</h3>
+  <label data-i18n="result"></label>
+  <select id="result">
+    <option value="" data-i18n="select"></option>
+    <option data-i18n="na"></option>
+    <option data-i18n="satisfactory"></option>
+    <option data-i18n="fair"></option>
+    <option data-i18n="poor"></option>
+  </select>
 
-<label data-i18n="result">Inspection Result</label>
-<select id="result" onchange="onResultChange()">
-  <option value="">--</option>
-  <option>不適用</option><option>滿意</option><option>尚可</option><option>欠佳</option>
-</select>
+  <label data-i18n="currentPhoto"></label>
+  <button onclick="curInput.click()" data-i18n="upload"></button>
+  <input type="file" id="curInput" multiple accept="image/*" style="display:none"
+    onchange="handleFiles(this,curList)">
+  <div id="curList" class="preview-list"></div>
 
-<label data-i18n="photo">Current Photos</label>
-<button onclick="curInput.click()" data-i18n="upload">📸 Upload Photos</button>
-<input type="file" id="curInput" multiple accept="image/*" style="display:none"
-  onchange="handleFiles(this,curList)">
-<div id="curList" class="preview-list"></div>
-
-<div class="followup" id="followup">
-<label data-i18n="remark">Remark</label>
-<textarea></textarea>
-
-<label data-i18n="deadline">Deadline</label>
-<input type="date">
-
-<label data-i18n="followPhoto">Follow-up Photos</label>
-<button onclick="folInput.click()" data-i18n="upload">📸 Upload Photos</button>
-<input type="file" id="folInput" multiple accept="image/*" style="display:none"
-  onchange="handleFiles(this,folList)">
-<div id="folList" class="preview-list"></div>
+  <button onclick="share()" data-i18n="share"></button>
 </div>
 
-<button onclick="share()" data-i18n="share">📤 Share</button>
-</div>
-
-<button id="finishBtn" class="finish" disabled data-i18n="finish">
-✅ Complete Inspection
-</button>
-
-<!-- Modal -->
 <div class="modal" id="modal" onclick="this.style.display='none'">
   <img id="modalImg">
 </div>
@@ -102,12 +70,11 @@ function handleFiles(input,list){
   [...input.files].forEach(f=>{
     const r=new FileReader();
     const div=document.createElement("div");
-    div.className="preview";
+    div.style.position="relative";
     const img=document.createElement("img");
-    const del=document.createElement("span");
-    del.innerText="×";
-    del.onclick=()=>div.remove();
     img.onclick=()=>{ modalImg.src=img.src; modal.style.display="flex"; };
+    const del=document.createElement("span");
+    del.innerText="×"; del.onclick=()=>div.remove();
     r.onload=e=>img.src=e.target.result;
     r.readAsDataURL(f);
     div.append(img,del);
@@ -116,33 +83,55 @@ function handleFiles(input,list){
   input.value="";
 }
 
-function onResultChange(){
-  followup.style.display=(result.value==="尚可"||result.value==="欠佳")?"block":"none";
-}
-
 function share(){
-  alert("分享內容已整合（WhatsApp / Email 可接）");
+  const msg=encodeURIComponent(
+    document.querySelector('[data-i18n="title"]').innerText +
+    "\n" +
+    document.getElementById("result").value
+  );
+  if(confirm("WhatsApp? Cancel = Email")){
+    window.open("https://wa.me/?text="+msg);
+  }else{
+    window.location="mailto:?body="+msg;
+  }
 }
 
-const dict={
-en:{title:"Fire Safety Inspection Record",result:"Inspection Result",photo:"Current Photos",
-followPhoto:"Follow-up Photos",remark:"Remark",deadline:"Deadline",share:"Share",
-finish:"✅ Complete Inspection",upload:"📸 Upload Photos"},
-zh:{title:"防火安全巡查記錄",result:"檢查結果",photo:"現況照片",
-followPhoto:"跟進照片",remark:"備註",deadline:"跟進限期",share:"分享",
-finish:"✅ 完成巡查",upload:"📸 上載相片"}
+const dict = {
+  zh:{title:"防火安全巡查記錄",project:"工程名稱",inspector:"巡查員",result:"檢查結果",
+      select:"-- 請選擇 --",na:"不適用",satisfactory:"滿意",fair:"尚可",poor:"欠佳",
+      currentPhoto:"現況照片",upload:"📸 上載相片",share:"📤 分享"},
+  zhcn:{title:"防火安全检查记录",project:"工程名称",inspector:"检查员",result:"检查结果",
+      select:"-- 请选择 --",na:"不适用",satisfactory:"满意",fair:"尚可",poor:"欠佳",
+      currentPhoto:"现场照片",upload:"📸 上传照片",share:"📤 分享"},
+  en:{title:"Fire Safety Inspection Record",project:"Project Name",inspector:"Inspector",
+      result:"Inspection Result",select:"-- Select --",na:"N/A",satisfactory:"Satisfactory",
+      fair:"Fair",poor:"Poor",currentPhoto:"Current Photos",
+      upload:"📸 Upload Photos",share:"📤 Share"},
+  ja:{title:"防火点検記録",result:"点検結果",select:"-- 選択 --",na:"該当なし",
+      satisfactory:"良好",fair:"要注意",poor:"不良",upload:"📸 写真追加",share:"📤 共有"},
+  ko:{title:"화재 안전 점검 기록",result:"점검 결과",select:"-- 선택 --",
+      na:"해당 없음",satisfactory:"양호",fair:"보통",poor:"불량",upload:"📸 사진 업로드",share:"📤 공유"},
+  th:{title:"บันทึกการตรวจสอบอัคคีภัย",result:"ผลการตรวจสอบ",select:"-- เลือก --",
+      na:"ไม่เกี่ยวข้อง",satisfactory:"เรียบร้อย",fair:"พอใช้",poor:"ต้องปรับปรุง",
+      upload:"📸 อัปโหลด",share:"📤 แชร์"},
+  np:{title:"अग्नि सुरक्षा निरीक्षण",result:"निरीक्षण परिणाम",select:"-- चयन --",
+      na:"लागु हुँदैन",satisfactory:"सन्तोषजनक",fair:"ठिक",poor:"खराब",upload:"📸 अपलोड",share:"📤 सेयर"},
+  hi:{title:"अग्नि सुरक्षा निरीक्षण",result:"निरीक्षण परिणाम",select:"-- चयन --",
+      na:"लागू नहीं",satisfactory:"ठीक",fair:"सामान्य",poor:"खराब",upload:"📸 अपलोड",share:"📤 साझा"},
+  ar:{title:"فحص السلامة من الحريق",result:"نتيجة الفحص",select:"-- اختر --",
+      na:"غير منطبق",satisfactory:"جيد",fair:"مقبول",poor:"سيء",upload:"📸 تحميل",share:"📤 مشاركة"}
 };
 
 function setLang(l){
   document.querySelectorAll("[data-i18n]").forEach(e=>{
-    const k=e.dataset.i18n;
-    if(dict[l]&&dict[l][k]) e.innerText=dict[l][k];
+    e.innerText=dict[l][e.dataset.i18n];
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach(e=>{
-    const k=e.dataset.i18nPlaceholder;
-    if(dict[l]&&dict[l][k]) e.placeholder=dict[l][k];
+    e.placeholder=dict[l][e.dataset.i18nPlaceholder];
   });
 }
+
+setLang("zh");
 </script>
 
 </body>

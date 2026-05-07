@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Inspection</title>
+<title>Fire Safety Inspection</title>
 
 <style>
 body{font-family:Arial;background:#f4f6f9;padding:16px}
 header{display:flex;justify-content:space-between;align-items:center}
-header img{height:45px}
 .section{background:#fff;padding:16px;border-radius:8px;margin-top:16px}
-label{font-weight:bold;display:block;margin-top:12px}
+.item{border-top:1px solid #ddd;padding-top:16px;margin-top:16px}
+label{font-weight:bold;display:block;margin-top:10px}
 select,input,textarea,button{width:100%;padding:8px;margin-top:6px}
+.followup{display:none}
 .preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .preview{position:relative}
-.preview img{width:80px;height:80px;object-fit:cover;border:1px solid #ccc;cursor:pointer}
+.preview img{width:80px;height:80px;border:1px solid #ccc;cursor:pointer}
 .preview .del{position:absolute;top:0;right:0;background:red;color:#fff;font-size:12px;padding:2px 4px;cursor:pointer}
 .filename{font-size:12px;text-align:center}
-.followup{display:none}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);justify-content:center;align-items:center}
 .modal img{max-width:90%;max-height:90%}
 </style>
@@ -26,111 +26,106 @@ select,input,textarea,button{width:100%;padding:8px;margin-top:6px}
 <body>
 
 <header>
-  <img src="logo.png" alt="Company Logo">
-  <select onchange="setLang(this.value)">
-    <option value="zh">中(繁)</option>
-    <option value="zhcn">中(简)</option>
-    <option value="en">English</option>
-    <option value="ja">日本語</option>
-    <option value="ko">한국어</option>
-    <option value="th">ไทย</option>
-    <option value="np">नेपाली</option>
-    <option value="hi">हिन्दी</option>
-    <option value="ar">العربية</option>
-  </select>
+  <h2>Fire Safety Inspection Checklist</h2>
 </header>
 
 <div class="section">
-  <h2 data-i18n="title"></h2>
-  <input data-i18n-placeholder="project">
-  <input data-i18n-placeholder="inspector">
-  <label data-i18n="date"></label>
+  <label>地盤 / 工程名稱</label>
+  <input>
+  <label>巡查員姓名</label>
+  <input>
+  <label>巡查日期</label>
   <input type="date">
 </div>
 
-<div class="section">
-  <label data-i18n="result"></label>
-  <select id="result" onchange="onResultChange()">
-    <option value="" data-i18n="select"></option>
-    <option value="na" data-i18n="na"></option>
-    <option value="ok" data-i18n="satisfactory"></option>
-    <option value="fair" data-i18n="fair"></option>
-    <option value="poor" data-i18n="poor"></option>
-  </select>
-
-  <label data-i18n="currentPhoto"></label>
-  <button onclick="curInput.click()" data-i18n="upload"></button>
-  <input type="file" id="curInput" multiple accept="image/*" style="display:none"
-         onchange="handleFiles(this,curList)">
-  <div id="curList" class="preview-list"></div>
-
-  <div class="followup" id="followup">
-    <label data-i18n="remark"></label>
-    <textarea id="remark"></textarea>
-
-    <label data-i18n="deadline"></label>
-    <input type="date" id="deadline">
-
-    <label data-i18n="followPhoto"></label>
-    <button onclick="folInput.click()" data-i18n="upload"></button>
-    <input type="file" id="folInput" multiple accept="image/*" style="display:none"
-           onchange="handleFiles(this,folList)">
-    <div id="folList" class="preview-list"></div>
-  </div>
-
-  <button onclick="share()" data-i18n="share"></button>
-</div>
+<div class="section" id="items"></div>
 
 <div class="modal" id="modal" onclick="this.style.display='none'">
   <img id="modalImg">
 </div>
 
 <script>
-const dict={
-zh:{title:"防火安全巡查記錄",project:"工程名稱",inspector:"巡查員",
-date:"巡查日期",result:"檢查結果",select:"-- 請選擇 --",na:"不適用",
-satisfactory:"滿意",fair:"尚可",poor:"欠佳",
-currentPhoto:"現況照片",followPhoto:"跟進照片",
-remark:"備註",deadline:"跟進限期",upload:"📸 上載相片",share:"📤 分享"},
+const checklist = [
+"已委派防火視察火警高危區",
+"已實施禁煙政策",
+"熱許可證（電焊／風焊）",
+"保安巡火情況",
+"工作地方收拾妥當（沒有雜物、紙皮、廢紙積聚）",
+"電動消防泵及消防喉轆",
+"滅火筒足夠及狀況良好",
+"其他救火設施（例如灑水設備）",
+"逃生設備（例如火通道）",
+"警告標語（禁止吸煙／易燃物品）",
+"緊急應變小組已設立及張貼緊急事故聯絡電話",
+"防火安全講座",
+"最近一次火警演習日期",
+"其他觀察事項"
+];
 
-en:{title:"Fire Safety Inspection Record",project:"Project Name",inspector:"Inspector",
-date:"Inspection Date",result:"Inspection Result",select:"-- Select --",na:"N/A",
-satisfactory:"Satisfactory",fair:"Fair",poor:"Poor",
-currentPhoto:"Current Photos",followPhoto:"Follow-up Photos",
-remark:"Remark",deadline:"Follow-up Deadline",upload:"📸 Upload Photos",share:"📤 Share"}
-};
+const container = document.getElementById("items");
 
-function setLang(l){
-  document.querySelectorAll("[data-i18n]").forEach(e=>{
-    e.innerText=dict[l][e.dataset.i18n];
-  });
-  document.querySelectorAll("[data-i18n-placeholder]").forEach(e=>{
-    e.placeholder=dict[l][e.dataset.i18nPlaceholder];
-  });
+checklist.forEach((text, i) => {
+  container.innerHTML += `
+  <div class="item">
+    <h3>${i+1}. ${text}</h3>
+
+    <label>檢查結果</label>
+    <select onchange="toggleFollowup(this)">
+      <option value="">-- 請選擇 --</option>
+      <option value="na">不適用</option>
+      <option value="ok">滿意</option>
+      <option value="fair">尚可</option>
+      <option value="poor">欠佳</option>
+    </select>
+
+    <label>現況相片</label>
+    <button onclick="this.nextElementSibling.click()">📸 上載相片</button>
+    <input type="file" multiple accept="image/*" style="display:none"
+      onchange="handleFiles(this)">
+
+    <div class="preview-list"></div>
+
+    <div class="followup">
+      <label>備註</label>
+      <textarea></textarea>
+
+      <label>跟進限期</label>
+      <input type="date">
+
+      <label>跟進相片</label>
+      <button onclick="this.nextElementSibling.click()">📸 上載相片</button>
+      <input type="file" multiple accept="image/*" style="display:none"
+        onchange="handleFiles(this)">
+      <div class="preview-list"></div>
+    </div>
+
+    <button onclick="shareItem('${text}')">📤 分享此項目</button>
+  </div>
+  `;
+});
+
+function toggleFollowup(sel){
+  const block = sel.closest(".item").querySelector(".followup");
+  block.style.display = (sel.value==="fair"||sel.value==="poor")?"block":"none";
 }
-setLang("zh");
 
-function onResultChange(){
-  followup.style.display=(result.value==="fair"||result.value==="poor")?"block":"none";
-}
-
-function handleFiles(input,list){
+function handleFiles(input){
+  const list = input.nextElementSibling;
   [...input.files].forEach(f=>{
     const div=document.createElement("div");
     div.className="preview";
     const img=document.createElement("img");
-    const name=document.createElement("div");
     const del=document.createElement("div");
+    const name=document.createElement("div");
 
-    name.className="filename"; name.innerText=f.name;
     del.className="del"; del.innerText="×";
     del.onclick=()=>div.remove();
-
-    img.onclick=()=>{ modalImg.src=img.src; modal.style.display="flex"; };
+    name.className="filename"; name.innerText=f.name;
 
     const r=new FileReader();
     r.onload=e=>img.src=e.target.result;
     r.readAsDataURL(f);
+    img.onclick=()=>{ modalImg.src=img.src; modal.style.display="flex"; };
 
     div.append(img,del,name);
     list.append(div);
@@ -138,11 +133,8 @@ function handleFiles(input,list){
   input.value="";
 }
 
-function share(){
-  const msg=encodeURIComponent(
-    document.querySelector('[data-i18n="title"]').innerText+"\n"+
-    result.options[result.selectedIndex].text
-  );
+function shareItem(text){
+  const msg=encodeURIComponent("Fire Safety Inspection:\n"+text);
   if(confirm("WhatsApp? Cancel = Email")){
     window.open("https://wa.me/?text="+msg);
   }else{

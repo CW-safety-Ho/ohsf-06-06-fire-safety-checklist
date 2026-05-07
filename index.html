@@ -2,134 +2,31 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fire Safety Inspection</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  font-family:Arial, Helvetica, sans-serif;
-  background:#2f343a;
-  padding:20px;
-}
-header{
-  display:flex;
-  align-items:center;
-  margin-bottom:24px;
-}
-header img{
-  height:160px;   /* Logo 放大 ≥4 倍 */
-}
+body{font-family:Arial;background:#2f343a;padding:20px}
+header{display:flex;align-items:center;margin-bottom:20px}
+header img{height:160px}
 header h1{
-  flex:1;
-  text-align:center;
-  font-size:36px;
-  font-weight:bold;
-  white-space:nowrap;
-  color:#fff;
-  margin:0 20px;
+  flex:1;color:#fff;text-align:center;
+  font-size:36px;white-space:nowrap;margin:0 20px
 }
-header select{
-  padding:6px;
-  font-size:16px;
-}
+header select{font-size:16px}
 
-.section{
-  background:#fff;
-  padding:16px;
-  border-radius:8px;
-  margin-bottom:20px;
-}
+.section{background:#fff;padding:16px;border-radius:8px;margin-bottom:20px}
 
-.item{
-  border-top:2px solid #ddd;
-  padding-top:16px;
-  margin-top:16px;
-}
+.item{border-top:1px solid #ccc;padding-top:16px;margin-top:16px}
+.item-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
-.item h3{
-  margin:0 0 12px 0;
-}
+label{font-weight:bold;display:block;margin-top:8px}
+select,input,textarea,button{width:100%;padding:8px;margin-top:6px}
 
-.item-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-}
+.followup{display:none}
 
-label{
-  font-weight:bold;
-  margin-top:10px;
-  display:block;
-}
-
-select, input, textarea, button{
-  width:100%;
-  padding:8px;
-  margin-top:6px;
-  font-size:14px;
-}
-
-.followup{
-  display:none;
-}
-
-.preview-list{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:6px;
-}
-.preview{
-  position:relative;
-}
-.preview img{
-  width:70px;
-  height:70px;
-  object-fit:cover;
-  border:1px solid #ccc;
-  cursor:pointer;
-}
-.preview .del{
-  position:absolute;
-  top:0;
-  right:0;
-  background:red;
-  color:#fff;
-  font-size:12px;
-  padding:1px 4px;
-  cursor:pointer;
-}
-.filename{
-  font-size:11px;
-  text-align:center;
-}
-
-footer{
-  display:flex;
-  justify-content:flex-end;
-}
-
-.print-btn{
-  background:#0078d4;
-  border:none;
-  color:#fff;
-  padding:10px 16px;
-  font-size:16px;
-  cursor:pointer;
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  justify-content:center;
-  align-items:center;
-}
-.modal img{
-  max-width:90%;
-  max-height:90%;
-}
+footer{text-align:right}
+button.print{background:#0078d4;color:#fff;border:none;padding:10px 16px;font-size:16px}
 </style>
 </head>
 
@@ -138,9 +35,114 @@ footer{
 <header>
   <img src="logo.png" alt="Company Logo">
 
-  <h1 data-i18n="title">
+  <h1 id="title">
     防火安全巡查清單 Fire Safety Inspection Checklist
   </h1>
 
   <select onchange="setLang(this.value)">
+    <option value="bi">中英雙語</option>
+    <option value="zh">中文</option>
     <option value="en">English</option>
+  </select>
+</header>
+
+<div class="section">
+  <label id="lblProject">地盤 / 工程名稱</label>
+  <input>
+  <label id="lblInspector">巡查員</label>
+  <input>
+  <label id="lblDate">巡查日期</label>
+  <input type="date">
+</div>
+
+<div class="section" id="items"></div>
+
+<footer>
+  <button class="print" onclick="window.print()">🖨 列印 / PDF</button>
+</footer>
+
+<script>
+const texts={
+  zh:{
+    title:"防火安全巡查清單",
+    project:"地盤 / 工程名稱",
+    inspector:"巡查員",
+    date:"巡查日期"
+  },
+  en:{
+    title:"Fire Safety Inspection Checklist",
+    project:"Project / Site",
+    inspector:"Inspector",
+    date:"Inspection Date"
+  },
+  bi:{
+    title:"防火安全巡查清單 Fire Safety Inspection Checklist",
+    project:"地盤 / 工程名稱 Project / Site",
+    inspector:"巡查員 Inspector",
+    date:"巡查日期 Inspection Date"
+  }
+};
+
+function setLang(l){
+  document.getElementById("title").innerText=texts[l].title;
+  document.getElementById("lblProject").innerText=texts[l].project;
+  document.getElementById("lblInspector").innerText=texts[l].inspector;
+  document.getElementById("lblDate").innerText=texts[l].date;
+}
+
+const checklist=[
+"已委派防火視察火警高危區",
+"已實施禁煙政策",
+"熱許可證（電焊／風焊）",
+"保安巡火情況",
+"工作地方收拾妥當",
+"電動消防泵及消防喉轆",
+"滅火筒足夠及狀況良好",
+"其他救火設施",
+"逃生設備",
+"警告標語",
+"緊急應變小組及聯絡電話",
+"防火安全講座",
+"最近一次火警演習日期",
+"其他觀察事項"
+];
+
+const box=document.getElementById("items");
+
+checklist.forEach((t,i)=>{
+  const d=document.createElement("div");
+  d.className="item";
+  d.innerHTML=`
+    <h3>${i+1}. ${t}</h3>
+    <div class="item-grid">
+      <div>
+        <label>檢查結果</label>
+        <select onchange="showFollowup(this)">
+          <option></option>
+          <option>不適用</option>
+          <option>滿意</option>
+          <option>尚可</option>
+          <option>欠佳</option>
+        </select>
+      </div>
+      <div class="followup">
+        <label>備註</label>
+        <textarea></textarea>
+        <label>跟進日期</label>
+        <input type="date">
+      </div>
+    </div>
+  `;
+  box.appendChild(d);
+});
+
+function showFollowup(sel){
+  const f=sel.closest(".item").querySelector(".followup");
+  f.style.display=(sel.value==="尚可"||sel.value==="欠佳")?"block":"none";
+}
+
+setLang("bi");
+</script>
+
+</body>
+</html>

@@ -1,69 +1,147 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fire Safety Inspection Checklist</title>
-  <style>
-    body { font-family: Arial; padding: 16px; }
-    h2 { margin-top: 24px; }
-    .item { margin-bottom: 16px; }
-    .remark { display:none; margin-top:8px; }
-    label { font-weight: bold; }
-    select, input, textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      font-size: 16px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire Safety Inspection</title>
+
+<style>
+body { font-family: Arial, sans-serif; background:#f4f6f9; padding:16px }
+header { display:flex; justify-content:space-between; align-items:center }
+.section { background:#fff; padding:16px; border-radius:8px; margin-top:16px }
+label { font-weight:bold; margin-top:12px; display:block }
+button, select, input, textarea {
+  width:100%; padding:8px; margin-top:6px; font-size:14px
+}
+.preview-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
+.preview { position:relative }
+.preview img {
+  width:80px; height:80px; object-fit:cover; border:1px solid #ccc; cursor:pointer
+}
+.preview span {
+  position:absolute; top:0; right:0; background:red; color:#fff;
+  font-size:12px; padding:2px 4px; cursor:pointer
+}
+.followup { display:none }
+.finish { background:#999; color:#fff; font-weight:bold; border:none }
+.finish:disabled { cursor:not-allowed }
+.modal {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
+  justify-content:center; align-items:center
+}
+.modal img { max-width:90%; max-height:90% }
+</style>
 </head>
 
 <body>
 
-<h1>Fire Safety Inspection Checklist</h1>
+<header>
+  <h2 data-i18n="title">Fire Safety Inspection Record</h2>
+  <select onchange="setLang(this.value)">
+    <option value="zh">中(繁)</option>
+    <option value="zhcn">中(简)</option>
+    <option value="en">English</option>
+    <option value="ja">日本語</option>
+    <option value="ko">한국어</option>
+    <option value="th">ไทย</option>
+    <option value="np">नेपाली</option>
+    <option value="hi">हिन्दी</option>
+    <option value="ar">العربية</option>
+  </select>
+</header>
 
-<h2>基本資料</h2>
-<input placeholder="地盤名稱">
+<div class="section">
+  <input data-i18n-placeholder="project" placeholder="Project / Site Name">
+  <input data-i18n-placeholder="inspector" placeholder="Inspector Name">
+  <input type="date">
+</div>
+
+<div class="section">
+<h3 data-i18n="item">Item – Fire Extinguisher Condition</h3>
+
+<label data-i18n="result">Inspection Result</label>
+<select id="result" onchange="onResultChange()">
+  <option value="">--</option>
+  <option>不適用</option><option>滿意</option><option>尚可</option><option>欠佳</option>
+</select>
+
+<label data-i18n="photo">Current Photos</label>
+<button onclick="curInput.click()" data-i18n="upload">📸 Upload Photos</button>
+<input type="file" id="curInput" multiple accept="image/*" style="display:none"
+  onchange="handleFiles(this,curList)">
+<div id="curList" class="preview-list"></div>
+
+<div class="followup" id="followup">
+<label data-i18n="remark">Remark</label>
+<textarea></textarea>
+
+<label data-i18n="deadline">Deadline</label>
 <input type="date">
-<input placeholder="巡查員姓名">
 
-<h2>防火巡查項目</h2>
-
-<div class="item">
-  <label>已實施禁煙政策</label>
-  <select onchange="toggleRemark(this)">
-    <option value="">-- 請選擇 --</option>
-    <option value="ok">尚可</option>
-    <option value="issue">有問題</option>
-  </select>
-  <textarea class="remark" placeholder="備註"></textarea>
+<label data-i18n="followPhoto">Follow-up Photos</label>
+<button onclick="folInput.click()" data-i18n="upload">📸 Upload Photos</button>
+<input type="file" id="folInput" multiple accept="image/*" style="display:none"
+  onchange="handleFiles(this,folList)">
+<div id="folList" class="preview-list"></div>
 </div>
 
-<div class="item">
-  <label>熱許可證（電焊／風焊）</label>
-  <select onchange="toggleRemark(this)">
-    <option value="">-- 請選擇 --</option>
-    <option value="ok">尚可</option>
-    <option value="issue">有問題</option>
-  </select>
-  <textarea class="remark" placeholder="備註"></textarea>
+<button onclick="share()" data-i18n="share">📤 Share</button>
 </div>
 
-<div class="item">
-  <label>滅火筒足夠及狀況良好</label>
-  <select onchange="toggleRemark(this)">
-    <option value="">-- 請選擇 --</option>
-    <option value="ok">尚可</option>
-    <option value="issue">有問題</option>
-  </select>
-  <textarea class="remark" placeholder="備註"></textarea>
+<button id="finishBtn" class="finish" disabled data-i18n="finish">
+✅ Complete Inspection
+</button>
+
+<!-- Modal -->
+<div class="modal" id="modal" onclick="this.style.display='none'">
+  <img id="modalImg">
 </div>
 
 <script>
-function toggleRemark(selectEl) {
-  const remark = selectEl.nextElementSibling;
-  remark.style.display = selectEl.value === 'issue' ? 'block' : 'none';
+function handleFiles(input,list){
+  [...input.files].forEach(f=>{
+    const r=new FileReader();
+    const div=document.createElement("div");
+    div.className="preview";
+    const img=document.createElement("img");
+    const del=document.createElement("span");
+    del.innerText="×";
+    del.onclick=()=>div.remove();
+    img.onclick=()=>{ modalImg.src=img.src; modal.style.display="flex"; };
+    r.onload=e=>img.src=e.target.result;
+    r.readAsDataURL(f);
+    div.append(img,del);
+    list.append(div);
+  });
+  input.value="";
+}
+
+function onResultChange(){
+  followup.style.display=(result.value==="尚可"||result.value==="欠佳")?"block":"none";
+}
+
+function share(){
+  alert("分享內容已整合（WhatsApp / Email 可接）");
+}
+
+const dict={
+en:{title:"Fire Safety Inspection Record",result:"Inspection Result",photo:"Current Photos",
+followPhoto:"Follow-up Photos",remark:"Remark",deadline:"Deadline",share:"Share",
+finish:"✅ Complete Inspection",upload:"📸 Upload Photos"},
+zh:{title:"防火安全巡查記錄",result:"檢查結果",photo:"現況照片",
+followPhoto:"跟進照片",remark:"備註",deadline:"跟進限期",share:"分享",
+finish:"✅ 完成巡查",upload:"📸 上載相片"}
+};
+
+function setLang(l){
+  document.querySelectorAll("[data-i18n]").forEach(e=>{
+    const k=e.dataset.i18n;
+    if(dict[l]&&dict[l][k]) e.innerText=dict[l][k];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(e=>{
+    const k=e.dataset.i18nPlaceholder;
+    if(dict[l]&&dict[l][k]) e.placeholder=dict[l][k];
+  });
 }
 </script>
 
